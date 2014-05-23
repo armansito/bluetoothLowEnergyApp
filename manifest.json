@@ -1,0 +1,11 @@
+{
+  "name": "Bluetooth Low Energy Test App",
+  "description": "App testing the chrome.bluetoothLowEnergy API",
+  "version": "0.1",
+  "app": {
+    "background": {
+      "scripts": ["background.js"]
+    }
+  },
+  "bluetooth": {}
+}
