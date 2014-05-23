@@ -20,9 +20,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
   chrome.bluetooth.onAdapterStateChanged.addListener(updateAdapterState);
   chrome.bluetooth.getAdapterState(function (adapterState) {
-    if (checkAndHandleError()) {
+    if (checkAndHandleError())
       return;
-    }
 
     updateAdapterState(adapterState);
   });
@@ -62,8 +61,12 @@ document.addEventListener('DOMContentLoaded', function() {
     deviceDiv.setAttribute('id', 'device-entry-' + device.address);
     deviceDiv.setAttribute('class', 'device-entry');
 
+    var deviceHeader = document.createElement('h3');
+    deviceHeader.appendChild(document.createTextNode('Device'));
+    deviceDiv.appendChild(deviceHeader);
+
     var deviceFieldsDiv = document.createElement('div');
-    deviceDiv.setAttribute('id', 'device-fields-' + device.address);
+    deviceFieldsDiv.setAttribute('id', 'device-fields-' + device.address);
 
     updateDeviceEntry(deviceFieldsDiv, device);
 
@@ -73,7 +76,7 @@ document.addEventListener('DOMContentLoaded', function() {
     servicesDiv.setAttribute('class', 'services');
     deviceDiv.appendChild(servicesDiv);
 
-    var servicesHeader = document.createElement('h3');
+    var servicesHeader = document.createElement('h4');
     servicesHeader.appendChild(document.createTextNode('GATT Services'));
 
     servicesDiv.appendChild(servicesHeader);
@@ -83,21 +86,25 @@ document.addEventListener('DOMContentLoaded', function() {
 
     chrome.bluetoothLowEnergy.getServices(device.address, function (services) {
       services.forEach(function (service) {
-        var serviceDiv = document.createElement('div');
-        serviceDiv.setAttribute('id', 'service-entry-' + service.instanceId);
-
-        var serviceHeader = document.createElement('h4');
-        serviceHeader.appendChild(document.createTextNode('Service'));
-        serviceDiv.appendChild(serviceHeader);
-
-        updateServiceEntry(serviceDiv, service);
-
-        servicesDiv.appendChild(serviceDiv);
+        appendNewService(servicesDiv, service);
       });
     });
   };
 
   // GATT service list UI
+  var appendNewService = function (deviceServicesDiv, service) {
+    var serviceDiv = document.createElement('div');
+    serviceDiv.setAttribute('id', 'service-entry-' + service.instanceId);
+
+    var serviceHeader = document.createElement('h4');
+    serviceHeader.appendChild(document.createTextNode('Service'));
+    serviceDiv.appendChild(serviceHeader);
+
+    updateServiceEntry(serviceDiv, service);
+
+    deviceServicesDiv.appendChild(serviceDiv);
+  };
+
   var updateServiceEntry = function (serviceDiv, service) {
     var serviceFieldDiv = document.createElement('div');
     serviceFieldDiv.setAttribute('class', 'service-entry-field');
@@ -125,21 +132,31 @@ document.addEventListener('DOMContentLoaded', function() {
   chrome.bluetooth.onDeviceAdded.addListener(appendNewDevice);
   chrome.bluetooth.onDeviceChanged.addListener(function (device) {
     var deviceFieldsDiv = document.getElementById('device-fields-' + device.address);
-    if (deviceFieldsDiv) {
+    if (deviceFieldsDiv)
       updateDeviceEntry(deviceFieldsDiv, device);
-    }
   });
   chrome.bluetooth.onDeviceRemoved.addListener(function (device) {
     var deviceDiv = document.getElementById('device-entry-' + device.address);
-    if (deviceDiv) {
+    if (deviceDiv)
       deviceDiv.parentNode.removeChild(deviceDiv);
-    }
   });
   chrome.bluetooth.getDevices(function (devices) {
-    if (checkAndHandleError()) {
+    if (checkAndHandleError())
       return;
-    }
 
     devices.forEach(appendNewDevice);
+  });
+  chrome.bluetoothLowEnergy.onServiceAdded.addListener(function (service) {
+    var deviceDiv = document.getElementById('device-entry-' + service.deviceAddress);
+    if (deviceDiv) {
+      var servicesDiv = deviceDiv.querySelector('.services');
+      if (servicesDiv)
+        appendNewService(servicesDiv, service);
+    }
+  });
+  chrome.bluetoothLowEnergy.onServiceRemoved.addListener(function (service) {
+    var serviceDiv = document.getElementById('service-entry-' + service.instanceId);
+    if (serviceDiv)
+      serviceDiv.parentNode.removeChild(serviceDiv);
   });
 });
