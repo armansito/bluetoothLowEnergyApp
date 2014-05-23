@@ -100,32 +100,80 @@ document.addEventListener('DOMContentLoaded', function() {
     serviceHeader.appendChild(document.createTextNode('Service'));
     serviceDiv.appendChild(serviceHeader);
 
-    updateServiceEntry(serviceDiv, service);
+    var serviceFieldsDiv = document.createElement('div');
+    serviceFieldsDiv.setAttribute('id', 'service-fields-' + service.instanceId);
+    serviceDiv.appendChild(serviceFieldsDiv);
+
+    updateServiceEntry(serviceFieldsDiv, service);
 
     deviceServicesDiv.appendChild(serviceDiv);
   };
 
-  var updateServiceEntry = function (serviceDiv, service) {
+  var updateServiceEntry = function (serviceFieldsDiv, service) {
+    serviceFieldsDiv.innerHTML = '';
+
     var serviceFieldDiv = document.createElement('div');
     serviceFieldDiv.setAttribute('class', 'service-entry-field');
     serviceFieldDiv.appendChild(
         document.createTextNode('ID: ' + service.instanceId));
 
-    serviceDiv.appendChild(serviceFieldDiv);
+    serviceFieldsDiv.appendChild(serviceFieldDiv);
 
     serviceFieldDiv = document.createElement('div');
     serviceFieldDiv.setAttribute('class', 'service-entry-field');
     serviceFieldDiv.appendChild(
         document.createTextNode('UUID: ' + service.uuid));
 
-    serviceDiv.appendChild(serviceFieldDiv);
+    serviceFieldsDiv.appendChild(serviceFieldDiv);
 
     serviceFieldDiv = document.createElement('div');
     serviceFieldDiv.setAttribute('class', 'service-entry-field');
     serviceFieldDiv.appendChild(
         document.createTextNode('Primary: ' + service.isPrimary));
 
-    serviceDiv.appendChild(serviceFieldDiv);
+    serviceFieldsDiv.appendChild(serviceFieldDiv);
+
+    var characteristicsDiv = document.createElement('div');
+    characteristicsDiv.setAttribute('class', 'characteristic-entries');
+    serviceFieldsDiv.appendChild(characteristicsDiv);
+
+    chrome.bluetoothLowEnergy.getCharacteristics(service.instanceId,
+                                                 function (characteristics) {
+      characteristicsDiv.innerHTML = '';
+
+      if (checkAndHandleError())
+        return;
+
+      if (characteristics.length == 0)
+        return;
+
+      var characteristicsHeaderDiv = document.createElement('h5');
+      characteristicsHeaderDiv.appendChild(
+          document.createTextNode('Characteristics'));
+      characteristicsDiv.appendChild(characteristicsHeaderDiv);
+
+      characteristics.forEach(function (characteristic) {
+        appendNewCharacteristic(characteristicsDiv, characteristic);
+      });
+    });
+  };
+
+  var appendNewCharacteristic = function (characteristicsDiv, characteristic) {
+    var characteristicDiv = document.createElement('div');
+    characteristicDiv.setAttribute('class', 'characteristic-entry');
+
+    var characteristicHeaderDiv = document.createElement('h6');
+    characteristicHeaderDiv.appendChild(
+        document.createTextNode('Characteristic'));
+    characteristicDiv.appendChild(characteristicHeaderDiv);
+
+    var characteristicFieldDiv = document.createElement('div');
+    characteristicFieldDiv.setAttribute('class', 'characteristic-entry-field');
+    characteristicFieldDiv.appendChild(
+        document.createTextNode('UUID: ' + characteristic.uuid));
+
+    characteristicDiv.appendChild(characteristicFieldDiv);
+    characteristicsDiv.appendChild(characteristicDiv);
   };
 
   // Put things together.
@@ -158,5 +206,11 @@ document.addEventListener('DOMContentLoaded', function() {
     var serviceDiv = document.getElementById('service-entry-' + service.instanceId);
     if (serviceDiv)
       serviceDiv.parentNode.removeChild(serviceDiv);
+  });
+  chrome.bluetoothLowEnergy.onServiceChanged.addListener(function (service) {
+    var serviceFieldsDiv = document.getElementById('service-fields-' +
+                                                   service.instanceId);
+    if (serviceFieldsDiv)
+      updateServiceEntry(serviceFieldsDiv, service);
   });
 });
