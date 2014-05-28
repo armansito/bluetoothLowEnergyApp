@@ -170,10 +170,67 @@ document.addEventListener('DOMContentLoaded', function() {
     var characteristicFieldDiv = document.createElement('div');
     characteristicFieldDiv.setAttribute('class', 'characteristic-entry-field');
     characteristicFieldDiv.appendChild(
-        document.createTextNode('UUID: ' + characteristic.uuid));
-
+        document.createTextNode('ID: ' + characteristic.instanceId));
     characteristicDiv.appendChild(characteristicFieldDiv);
+
+    characteristicFieldDiv = document.createElement('div');
+    characteristicFieldDiv.setAttribute('class', 'characteristic-entry-field');
+    characteristicFieldDiv.appendChild(
+        document.createTextNode('UUID: ' + characteristic.uuid));
+    characteristicDiv.appendChild(characteristicFieldDiv);
+
+    characteristicFieldDiv = document.createElement('div');
+    characteristicFieldDiv.setAttribute('class', 'characteristic-entry-field');
+    characteristicFieldDiv.appendChild(
+        document.createTextNode('Properties: ' + characteristic.properties));
+    characteristicDiv.appendChild(characteristicFieldDiv);
+
     characteristicsDiv.appendChild(characteristicDiv);
+
+    var descriptorsDiv = document.createElement('div');
+    descriptorsDiv.setAttribute('class', 'descriptor-entries');
+    characteristicDiv.appendChild(descriptorsDiv);
+
+    chrome.bluetoothLowEnergy.getDescriptors(characteristic.instanceId,
+                                             function (descriptors) {
+      descriptorsDiv.innerHTML = '';
+
+      if (checkAndHandleError())
+        return;
+
+      var descriptorsHeaderDiv = document.createElement('h5');
+      descriptorsHeaderDiv.appendChild(
+          document.createTextNode('Descriptors'));
+      descriptorsDiv.appendChild(descriptorsHeaderDiv);
+
+      descriptors.forEach(function (descriptor) {
+        appendNewDescriptor(descriptorsDiv, descriptor);
+      });
+    });
+  };
+
+  var appendNewDescriptor = function (descriptorsDiv, descriptor) {
+    var descriptorDiv = document.createElement('div');
+    descriptorDiv.setAttribute('class', 'descriptor-entry');
+
+    var descriptorHeaderDiv = document.createElement('h6');
+    descriptorHeaderDiv.appendChild(
+        document.createTextNode('Descriptor'));
+    descriptorDiv.appendChild(descriptorHeaderDiv);
+
+    var descriptorFieldDiv = document.createElement('div');
+    descriptorFieldDiv.setAttribute('class', 'descriptor-entry-field');
+    descriptorFieldDiv.appendChild(
+        document.createTextNode('ID: ' + descriptor.instanceId));
+    descriptorDiv.appendChild(descriptorFieldDiv);
+
+    descriptorFieldDiv = document.createElement('div');
+    descriptorFieldDiv.setAttribute('class', 'descriptor-entry-field');
+    descriptorFieldDiv.appendChild(
+        document.createTextNode('UUID: ' + descriptor.uuid));
+    descriptorDiv.appendChild(descriptorFieldDiv);
+
+    descriptorsDiv.appendChild(descriptorDiv);
   };
 
   // Put things together.
